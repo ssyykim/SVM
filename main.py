@@ -1,50 +1,43 @@
 # Import necessary libraries
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
 import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
-# Example dataset
-# Hours Studied (independent variable)
-X = np.array([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]])
-# Exam Scores (dependent variable)
-Y = np.array([51, 55, 60, 68, 72, 75, 78, 82, 88, 90])
+# Simulated dataset
+data = {
+    'Age': [25, 34, 22, 27, 33, 29, 37, 36, 30, 31],
+    'Annual Income (k$)': [40, 80, 30, 78, 82, 54, 88, 61, 55, 48],
+    'Spending Score (1-100)': [61, 77, 40, 89, 91, 42, 95, 55, 50, 42]
+}
 
-# Split the data into training and testing sets
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+# Create a DataFrame
+df = pd.DataFrame(data)
 
-# Create a linear regression model
-model = LinearRegression()
+# Standardize the data
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df)
 
-# Fit the model with the training data
-model.fit(X_train, Y_train)
+# Apply PCA to reduce dimensions to 2 for visualization
+pca = PCA(n_components=2)
+df_pca = pca.fit_transform(df_scaled)
 
-# Predict values for the testing data
-Y_pred = model.predict(X_test)
+# Apply K-Means clustering
+kmeans = KMeans(n_clusters=3, random_state=42)
+clusters = kmeans.fit_predict(df_pca)
 
-# Calculate the mean squared error for the test data
-mse = mean_squared_error(Y_test, Y_pred)
-print(f"Mean Squared Error: {mse:.2f}")
+# Plot the clustered data
+plt.scatter(df_pca[:, 0], df_pca[:, 1], c=clusters, cmap='viridis', marker='o')
+plt.title('Clusters of customers')
+plt.xlabel('PCA Feature 1')
+plt.ylabel('PCA Feature 2')
+plt.colorbar(label='Cluster')
 
-# Predict values for the given range of hours studied
-X_predict = np.linspace(1, 10, 100).reshape(-1, 1)  # 100 points for a smooth line
-Y_predict = model.predict(X_predict)
-
-# Plotting the actual data points
-plt.scatter(X_train, Y_train, color='blue', label='Training data')
-plt.scatter(X_test, Y_test, color='green', label='Testing data')
-
-# Plotting the regression line
-plt.plot(X_predict, Y_predict, color='red', linewidth=2, label='Regression line')
-
-# Adding labels and title
-plt.xlabel('Hours Studied')
-plt.ylabel('Exam Score')
-plt.title('Hours Studied vs Exam Score (Linear Regression)')
-
-# Adding a legend
+# Show centroids
+centroids = kmeans.cluster_centers_
+plt.scatter(centroids[:, 0], centroids[:, 1], s=300, c='red', marker='x', label='Centroids')
 plt.legend()
 
-# Display the plot
 plt.show()
