@@ -1,53 +1,50 @@
+# Import necessary libraries
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.decomposition import PCA
 
-# Load the Iris dataset
-iris = datasets.load_iris()
-X = iris.data[:, :2]  # Select only the first two features for visualization
-y = iris.target
+# Example dataset
+# Hours Studied (independent variable)
+X = np.array([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]])
+# Exam Scores (dependent variable)
+Y = np.array([51, 55, 60, 68, 72, 75, 78, 82, 88, 90])
 
-# Split the dataset into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# Split the data into training and testing sets
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
 
-# Standardize features by removing the mean and scaling to unit variance
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# Create a linear regression model
+model = LinearRegression()
 
-# Create a SVM Classifier with a linear kernel
-svm = SVC(kernel='linear')
+# Fit the model with the training data
+model.fit(X_train, Y_train)
 
-# Train the model using the training sets
-svm.fit(X_train, y_train)
+# Predict values for the testing data
+Y_pred = model.predict(X_test)
 
-# Create a mesh to plot in
-h = .02  # step size in the mesh
-x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+# Calculate the mean squared error for the test data
+mse = mean_squared_error(Y_test, Y_pred)
+print(f"Mean Squared Error: {mse:.2f}")
 
-# Predict class for each point in the mesh
-Z = svm.predict(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
+# Predict values for the given range of hours studied
+X_predict = np.linspace(1, 10, 100).reshape(-1, 1)  # 100 points for a smooth line
+Y_predict = model.predict(X_predict)
 
-# Put the result into a color plot
-plt.contourf(xx, yy, Z, cmap=plt.cm.coolwarm, alpha=0.8)
+# Plotting the actual data points
+plt.scatter(X_train, Y_train, color='blue', label='Training data')
+plt.scatter(X_test, Y_test, color='green', label='Testing data')
 
-# Plot also the training points
-plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=plt.cm.coolwarm, edgecolors='k')
-# And the test points
-plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.coolwarm, edgecolors='k', marker='*')
+# Plotting the regression line
+plt.plot(X_predict, Y_predict, color='red', linewidth=2, label='Regression line')
 
-plt.xlabel('Sepal length')
-plt.ylabel('Sepal width')
-plt.xlim(xx.min(), xx.max())
-plt.ylim(yy.min(), yy.max())
-plt.xticks(())
-plt.yticks(())
-plt.title('SVM Decision Surface with Training and Test Points')
+# Adding labels and title
+plt.xlabel('Hours Studied')
+plt.ylabel('Exam Score')
+plt.title('Hours Studied vs Exam Score (Linear Regression)')
+
+# Adding a legend
+plt.legend()
+
+# Display the plot
 plt.show()
