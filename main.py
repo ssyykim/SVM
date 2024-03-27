@@ -1,53 +1,43 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.decomposition import PCA
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Load the Iris dataset
-iris = datasets.load_iris()
-X = iris.data[:, :2]  # Select only the first two features for visualization
-y = iris.target
+# Load the diabetes dataset
+diabetes = datasets.load_diabetes()
+X = diabetes.data
+y = diabetes.target
 
-# Split the dataset into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# Use only one feature for simplicity
+X = X[:, np.newaxis, 2]
 
-# Standardize features by removing the mean and scaling to unit variance
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# Split the data into training/testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-# Create a SVM Classifier with a linear kernel
-svm = SVC(kernel='linear')
+# Create linear regression object
+regr = LinearRegression()
 
 # Train the model using the training sets
-svm.fit(X_train, y_train)
+regr.fit(X_train, y_train)
 
-# Create a mesh to plot in
-h = .02  # step size in the mesh
-x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+# Make predictions using the testing set
+y_pred = regr.predict(X_test)
 
-# Predict class for each point in the mesh
-Z = svm.predict(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
+# The coefficients
+print('Coefficients: \n', regr.coef_)
+# The mean squared error
+print('Mean squared error: %.2f' % mean_squared_error(y_test, y_pred))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f' % r2_score(y_test, y_pred))
 
-# Put the result into a color plot
-plt.contourf(xx, yy, Z, cmap=plt.cm.coolwarm, alpha=0.8)
+# Plot outputs
+plt.scatter(X_test, y_test, color='black')
+plt.plot(X_test, y_pred, color='blue', linewidth=3)
 
-# Plot also the training points
-plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=plt.cm.coolwarm, edgecolors='k')
-# And the test points
-plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.coolwarm, edgecolors='k', marker='*')
-
-plt.xlabel('Sepal length')
-plt.ylabel('Sepal width')
-plt.xlim(xx.min(), xx.max())
-plt.ylim(yy.min(), yy.max())
 plt.xticks(())
 plt.yticks(())
-plt.title('SVM Decision Surface with Training and Test Points')
+plt.xlabel('Measured')
+plt.ylabel('Predicted')
+plt.title('Linear Regression Example')
 plt.show()
