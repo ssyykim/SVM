@@ -1,43 +1,43 @@
-# Import necessary libraries
-import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
 import matplotlib.pyplot as plt
 
-# Simulated dataset
+# Sample dataset
 data = {
-    'Age': [25, 34, 22, 27, 33, 29, 37, 36, 30, 31],
-    'Annual Income (k$)': [40, 80, 30, 78, 82, 54, 88, 61, 55, 48],
-    'Spending Score (1-100)': [61, 77, 40, 89, 91, 42, 95, 55, 50, 42]
+    'Credit Score': [720, 650, 500, 680, 695],
+    'Annual Income': [80000, 45000, 50000, 60000, 75000],
+    'Employment Status': ['Employed', 'Self-Employed', 'Unemployed', 'Employed', 'Employed'],
+    'Loan Amount': [5000, 15000, 20000, 10000, 8000],
+    'Previous Default': ['No', 'Yes', 'No', 'Yes', 'No'],
+    'Loan Approval': ['Approved', 'Denied', 'Denied', 'Denied', 'Approved']
 }
 
-# Create a DataFrame
+# Convert to DataFrame
 df = pd.DataFrame(data)
 
-# Standardize the data
-scaler = StandardScaler()
-df_scaled = scaler.fit_transform(df)
+# Convert categorical variables to numeric using one-hot encoding
+df_encoded = pd.get_dummies(df, columns=['Employment Status', 'Previous Default'])
 
-# Apply PCA to reduce dimensions to 2 for visualization
-pca = PCA(n_components=2)
-df_pca = pca.fit_transform(df_scaled)
+# Separate features and target variable
+X = df_encoded.drop('Loan Approval', axis=1)
+y = df_encoded['Loan Approval']
 
-# Apply K-Means clustering
-kmeans = KMeans(n_clusters=3, random_state=42)
-clusters = kmeans.fit_predict(df_pca)
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Plot the clustered data
-plt.scatter(df_pca[:, 0], df_pca[:, 1], c=clusters, cmap='viridis', marker='o')
-plt.title('Clusters of customers')
-plt.xlabel('PCA Feature 1')
-plt.ylabel('PCA Feature 2')
-plt.colorbar(label='Cluster')
+# Create a Decision Tree Classifier
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
 
-# Show centroids
-centroids = kmeans.cluster_centers_
-plt.scatter(centroids[:, 0], centroids[:, 1], s=300, c='red', marker='x', label='Centroids')
-plt.legend()
+# Predict on the test set
+y_pred = clf.predict(X_test)
 
+# Visualize the decision tree
+plt.figure(figsize=(12, 8))
+plot_tree(clf, filled=True, feature_names=X.columns, class_names=['Denied', 'Approved'])
 plt.show()
+
+# Print the text representation of the tree
+tree_rules = export_text(clf, feature_names=list(X.columns))
+print(tree_rules)
